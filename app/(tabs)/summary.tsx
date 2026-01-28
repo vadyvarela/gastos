@@ -1,16 +1,18 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, SafeAreaView, StyleSheet } from 'react-native';
-import { useExpenses } from '@/hooks/useExpenses';
-import { useIncomes } from '@/hooks/useIncomes';
-import { useFormattedCurrency } from '@/hooks/useFormattedCurrency';
-import { useCategoryStore } from '@/stores/categoryStore';
+import { BarChart } from '@/components/charts/BarChart';
 import { MonthFilter } from '@/components/filters/MonthFilter';
-import { getCurrentMonth } from '@/utils/date';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useExpenses } from '@/hooks/useExpenses';
+import { useFormattedCurrency } from '@/hooks/useFormattedCurrency';
+import { useIncomes } from '@/hooks/useIncomes';
+import { useCategoryStore } from '@/stores/categoryStore';
 import { useExpenseStore } from '@/stores/expenseStore';
 import { useIncomeStore } from '@/stores/incomeStore';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { BarChart } from '@/components/charts/BarChart';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { getCurrentMonth } from '@/utils/date';
+import React, { useMemo, useState } from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+import { Colors } from '@/constants/theme';
 
 export default function SummaryScreen() {
   const { expenses } = useExpenses();
@@ -20,8 +22,9 @@ export default function SummaryScreen() {
   const { setFilters: setIncomeFilters } = useIncomeStore();
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonth());
   const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
-  const styles = getStyles(isDark);
+  const styles = getStyles(isDark, theme);
 
   React.useEffect(() => {
     setFilters({ month: currentMonth });
@@ -83,8 +86,7 @@ export default function SummaryScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.titleSection}>
-            <IconSymbol name="chart.bar.fill" size={20} color={isDark ? '#FFFFFF' : '#0F172A'} />
-            <Text style={styles.title}>Resumo Financeiro</Text>
+            <Text style={styles.title}>Resumo Mensal</Text>
           </View>
         </View>
         <MonthFilter currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
@@ -98,37 +100,37 @@ export default function SummaryScreen() {
         <View style={styles.totalCard}>
           <View style={styles.balanceRow}>
             <View style={styles.balanceItem}>
-              <View style={[styles.balanceIcon, { backgroundColor: '#10B98120' }]}>
-                <IconSymbol name="arrow.down.circle.fill" size={20} color="#10B981" />
+              <View style={[styles.balanceIcon, { backgroundColor: theme.success + '15' }]}>
+                <IconSymbol name="arrow.down.circle.fill" size={20} color={theme.success} />
               </View>
               <View style={styles.balanceInfo}>
                 <Text style={styles.balanceLabel}>Receitas</Text>
-                <Text style={[styles.balanceValue, { color: '#10B981' }]}>
+                <Text style={[styles.balanceValue, { color: theme.success }]}>
                   {formattedTotalIncomes}
                 </Text>
               </View>
             </View>
             <View style={styles.balanceItem}>
-              <View style={[styles.balanceIcon, { backgroundColor: '#EF444420' }]}>
-                <IconSymbol name="arrow.up.circle.fill" size={20} color="#EF4444" />
+              <View style={[styles.balanceIcon, { backgroundColor: theme.danger + '15' }]}>
+                <IconSymbol name="arrow.up.circle.fill" size={20} color={theme.danger} />
               </View>
               <View style={styles.balanceInfo}>
                 <Text style={styles.balanceLabel}>Gastos</Text>
-                <Text style={[styles.balanceValue, { color: '#EF4444' }]}>
+                <Text style={[styles.balanceValue, { color: theme.danger }]}>
                   {formattedTotalExpenses}
                 </Text>
               </View>
             </View>
           </View>
           <View style={styles.saldoRow}>
-            <Text style={styles.saldoLabel}>Saldo do Mês</Text>
-            <Text style={[styles.saldoValue, { color: balance >= 0 ? '#10B981' : '#EF4444' }]}>
+            <Text style={styles.saldoLabel}>Balanço Final</Text>
+            <Text style={[styles.saldoValue, { color: balance >= 0 ? theme.success : theme.danger }]}>
               {balance >= 0 ? '+' : '-'}{formattedBalance}
             </Text>
           </View>
           <View style={styles.averageContainer}>
-            <IconSymbol name="chart.line.uptrend.xyaxis" size={14} color={isDark ? '#94A3B8' : '#64748B'} />
-            <Text style={styles.average}>Média diária de gastos: {formattedAverage}</Text>
+            <IconSymbol name="chart.line.uptrend.xyaxis" size={14} color={theme.muted} />
+            <Text style={styles.average}>Média diária: {formattedAverage}</Text>
           </View>
         </View>
 
@@ -136,15 +138,15 @@ export default function SummaryScreen() {
           <>
             <View style={styles.chartCard}>
               <View style={styles.chartHeader}>
-                <IconSymbol name="chart.bar" size={20} color={isDark ? '#94A3B8' : '#64748B'} />
-                <Text style={styles.sectionTitle}>Gráfico por Categoria</Text>
+                <IconSymbol name="chart.bar.fill" size={18} color={theme.tint} />
+                <Text style={styles.sectionTitle}>Distribuição de Gastos</Text>
               </View>
               <View style={styles.chartContainer}>
                 <BarChart
                   data={totalByCategory.map(item => ({
                     label: item.category?.name || 'Sem categoria',
                     value: item.value,
-                    color: item.category?.color || '#6B7280',
+                    color: item.category?.color || theme.muted,
                     percentage: item.percentage,
                   }))}
                   maxValue={totalExpenses}
@@ -154,8 +156,8 @@ export default function SummaryScreen() {
 
             <View style={styles.categoriesCard}>
               <View style={styles.chartHeader}>
-                <IconSymbol name="tag.fill" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
-                <Text style={styles.sectionTitle}>Detalhes por Categoria</Text>
+                <IconSymbol name="tag.fill" size={16} color={theme.tint} />
+                <Text style={styles.sectionTitle}>Maiores Despesas</Text>
               </View>
               {totalByCategory.map((item) => (
                 <View key={item.category?.id} style={styles.categoryItem}>
@@ -163,9 +165,9 @@ export default function SummaryScreen() {
                     <View style={styles.categoryLeft}>
                       {item.category && (
                         <View
-                          style={[styles.categoryIcon, { backgroundColor: item.category.color + '25' }]}
+                          style={[styles.categoryIcon, { backgroundColor: item.category.color + '15' }]}
                         >
-                          <IconSymbol name={item.category.icon} size={16} color={item.category.color} />
+                          <IconSymbol name={item.category.icon as any} size={16} color={item.category.color} />
                         </View>
                       )}
                       <View style={styles.categoryInfo}>
@@ -185,7 +187,7 @@ export default function SummaryScreen() {
                         styles.progressFill,
                         {
                           width: `${item.percentage}%`,
-                          backgroundColor: item.category?.color || '#gray',
+                          backgroundColor: item.category?.color || theme.muted,
                         },
                       ]}
                     />
@@ -198,12 +200,12 @@ export default function SummaryScreen() {
 
         {monthExpenses.length === 0 && monthIncomes.length === 0 && (
           <View style={styles.emptyContainer}>
-            <IconSymbol name="tray" size={48} color={isDark ? '#475569' : '#CBD5E1'} />
+            <IconSymbol name="tray" size={48} color={theme.border} />
             <Text style={styles.emptyText}>
-              Nenhum registro neste mês
+              Sem registros este mês
             </Text>
             <Text style={styles.emptySubtext}>
-              Adicione receitas e gastos para ver o resumo aqui
+              Suas movimentações aparecerão aqui.
             </Text>
           </View>
         )}
@@ -212,55 +214,53 @@ export default function SummaryScreen() {
   );
 }
 
-const getStyles = (isDark: boolean) => StyleSheet.create({
+const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: isDark ? '#000000' : '#F2F2F7',
+    backgroundColor: theme.background,
   },
   header: {
-    backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 0,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   headerTop: {
-    marginBottom: 10,
+    marginBottom: 12,
   },
   titleSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '800',
-    color: isDark ? '#F8FAFC' : '#0F172A',
-    letterSpacing: -0.5,
+    color: theme.text,
+    letterSpacing: -0.8,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 30,
   },
   totalCard: {
-    backgroundColor: isDark ? '#1A1F2E' : '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 20,
-    padding: 18,
+    padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: isDark ? 0.3 : 0.1,
+    shadowOpacity: isDark ? 0.2 : 0.03,
     shadowRadius: 12,
     elevation: 5,
-    borderWidth: 0,
+    borderWidth: 1,
+    borderColor: theme.border,
   },
   balanceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 16,
     gap: 12,
   },
   balanceItem: {
@@ -272,7 +272,7 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
   balanceIcon: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -281,36 +281,35 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
   },
   balanceLabel: {
     fontSize: 11,
-    color: isDark ? '#94A3B8' : '#64748B',
-    fontWeight: '600',
+    color: theme.muted,
+    fontWeight: '700',
     marginBottom: 2,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   balanceValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: -0.5,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   saldoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 12,
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: isDark ? '#334155' : '#F1F5F9',
-    marginBottom: 10,
+    borderTopColor: theme.border,
+    marginBottom: 12,
   },
   saldoLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
-    color: isDark ? '#D1D5DB' : '#475569',
-    letterSpacing: 0.2,
+    color: theme.text,
   },
   saldoValue: {
     fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: -0.5,
+    fontWeight: '900',
+    letterSpacing: -0.8,
   },
   averageContainer: {
     flexDirection: 'row',
@@ -318,46 +317,46 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     gap: 6,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: isDark ? '#334155' : '#F1F5F9',
+    borderTopColor: theme.border,
   },
   average: {
     fontSize: 12,
-    color: isDark ? '#94A3B8' : '#64748B',
-    fontWeight: '500',
+    color: theme.muted,
+    fontWeight: '600',
   },
   chartCard: {
-    backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 20,
+    backgroundColor: theme.card,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: isDark ? '#2C2C2E' : '#F0F0F0',
+    borderColor: theme.border,
   },
   chartHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: isDark ? '#FFFFFF' : '#0F172A',
-    letterSpacing: 0.2,
+    fontSize: 13,
+    fontWeight: '800',
+    color: theme.text,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   chartContainer: {
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 4,
   },
   categoriesCard: {
-    backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-    borderRadius: 24,
-    padding: 20,
+    backgroundColor: theme.card,
+    borderRadius: 20,
+    padding: 16,
     borderWidth: 1,
-    borderColor: isDark ? '#2C2C2E' : '#F0F0F0',
+    borderColor: theme.border,
   },
   categoryItem: {
-    marginBottom: 10,
+    marginBottom: 16,
   },
   categoryRow: {
     flexDirection: 'row',
@@ -369,57 +368,58 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    gap: 10,
   },
   categoryIcon: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
   },
   categoryInfo: {
     flex: 1,
   },
   categoryName: {
     fontSize: 13,
-    fontWeight: '600',
-    color: isDark ? '#FFFFFF' : '#0F172A',
-    marginBottom: 3,
+    fontWeight: '700',
+    color: theme.text,
+    marginBottom: 1,
   },
   categoryPercentage: {
     fontSize: 11,
-    color: isDark ? '#94A3B8' : '#64748B',
-    fontWeight: '500',
+    color: theme.muted,
+    fontWeight: '600',
   },
   categoryValue: {
     fontSize: 14,
-    fontWeight: '700',
-    color: isDark ? '#FFFFFF' : '#0F172A',
+    fontWeight: '800',
+    color: theme.text,
   },
   progressBar: {
-    height: 8,
-    backgroundColor: isDark ? '#334155' : '#F1F5F9',
-    borderRadius: 4,
+    height: 5,
+    backgroundColor: theme.surface,
+    borderRadius: 2.5,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 2.5,
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: 48,
+    paddingVertical: 40,
   },
   emptyText: {
-    color: isDark ? '#94A3B8' : '#64748B',
+    color: theme.text,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     marginTop: 16,
   },
   emptySubtext: {
-    color: isDark ? '#64748B' : '#94A3B8',
-    fontSize: 14,
-    marginTop: 8,
+    color: theme.muted,
+    fontSize: 13,
+    marginTop: 6,
+    textAlign: 'center',
   },
 });

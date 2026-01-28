@@ -1,12 +1,12 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, Text } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { ToastProvider } from '@/components/ui/Toast';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { ToastProvider } from '@/components/ui/Toast';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAppInit } from '@/hooks/useAppInit';
 
 export const unstable_settings = {
@@ -42,11 +42,37 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="add-expense" options={{ presentation: 'modal', title: 'Novo Gasto' }} />
-          <Stack.Screen name="expense/[id]" options={{ title: 'Detalhes do Gasto' }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen 
+            name="add-expense" 
+            options={{ 
+              presentation: 'modal', 
+              headerShown: true,
+              title: 'Novo Gasto' 
+            }} 
+          />
+          <Stack.Screen 
+            name="add-income" 
+            options={{ 
+              presentation: 'modal', 
+              headerShown: true,
+              title: 'Nova Receita' 
+            }} 
+          />
+          <Stack.Screen 
+            name="expense/[id]" 
+            options={{ 
+              headerShown: false 
+            }} 
+          />
+          <Stack.Screen 
+            name="income/[id]" 
+            options={{ 
+              headerShown: false 
+            }} 
+          />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         </Stack>
         <StatusBar style="auto" />
         <ToastProvider />

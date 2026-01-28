@@ -1,19 +1,22 @@
-import React, { useState } from 'react';
-import { View, SafeAreaView, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
 import { ExpenseForm } from '@/components/expense/ExpenseForm';
-import { ExpenseFormData } from '@/lib/types/expense';
-import { useExpenseStore } from '@/stores/expenseStore';
 import { showToast } from '@/components/ui/Toast';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ExpenseFormData } from '@/lib/types/expense';
+import { useExpenseStore } from '@/stores/expenseStore';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { SafeAreaView, StyleSheet } from 'react-native';
+
+import { Colors } from '@/constants/theme';
 
 export default function AddExpenseScreen() {
   const router = useRouter();
   const { addExpense } = useExpenseStore();
   const [loading, setLoading] = useState(false);
   const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
-  const styles = getStyles(isDark);
+  const styles = getStyles(isDark, theme);
 
   const handleSubmit = async (data: ExpenseFormData) => {
     setLoading(true);
@@ -47,9 +50,9 @@ export default function AddExpenseScreen() {
   );
 }
 
-const getStyles = (isDark: boolean) => StyleSheet.create({
+const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
+    backgroundColor: theme.background,
   },
 });

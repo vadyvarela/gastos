@@ -14,6 +14,8 @@ export type Category = z.infer<typeof categorySchema>;
 export const categoryFormSchema = categorySchema.omit({
   id: true,
   created_at: true,
+}).required({
+  is_default: true,
 });
 
 export type CategoryFormData = z.infer<typeof categoryFormSchema>;

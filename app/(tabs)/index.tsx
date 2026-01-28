@@ -1,26 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import { useExpenses } from '@/hooks/useExpenses';
-import { useIncomes } from '@/hooks/useIncomes';
-import { useCategories } from '@/hooks/useCategories';
-import { useSync } from '@/hooks/useSync';
 import { ExpenseList } from '@/components/expense/ExpenseList';
+import { CategoryFilter } from '@/components/filters/CategoryFilter';
+import { MonthFilter } from '@/components/filters/MonthFilter';
 import { IncomeList } from '@/components/income/IncomeList';
 import { SummaryCard } from '@/components/summary/SummaryCard';
-import { MonthFilter } from '@/components/filters/MonthFilter';
-import { CategoryFilter } from '@/components/filters/CategoryFilter';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { showToast } from '@/components/ui/Toast';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useCategories } from '@/hooks/useCategories';
+import { useExpenses } from '@/hooks/useExpenses';
+import { useIncomes } from '@/hooks/useIncomes';
+import { useSync } from '@/hooks/useSync';
+import { Expense } from '@/lib/types/expense';
+import { Income } from '@/lib/types/income';
 import { useExpenseStore } from '@/stores/expenseStore';
 import { useIncomeStore } from '@/stores/incomeStore';
 import { getCurrentMonth } from '@/utils/date';
-import { showToast } from '@/components/ui/Toast';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { Expense } from '@/lib/types/expense';
-import { Income } from '@/lib/types/income';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { Colors } from '@/constants/theme';
 
 type TabType = 'expenses' | 'incomes';
 
@@ -33,6 +34,7 @@ export default function HomeScreen() {
   const { deleteExpense } = useExpenseStore();
   const { deleteIncome } = useIncomeStore();
   const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
   
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonth());
@@ -134,7 +136,7 @@ export default function HomeScreen() {
   });
 
   const loading = expensesLoading || incomesLoading;
-  const styles = getStyles(isDark);
+  const styles = getStyles(isDark, theme);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -142,7 +144,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View style={styles.titleSection}>
-              <Text style={styles.title}>Financeiro</Text>
+              <Text style={styles.title}>Minhas Finanças</Text>
               {!isOnline && (
                 <View style={styles.offlineBadge}>
                   <View style={styles.offlineDot} />
@@ -153,31 +155,17 @@ export default function HomeScreen() {
             <View style={styles.addButtons}>
               <TouchableOpacity
                 onPress={() => router.push('/add-income')}
-                activeOpacity={0.8}
-                style={styles.addButton}
+                activeOpacity={0.7}
+                style={[styles.addButton, { backgroundColor: theme.success + '15' }]}
               >
-                <LinearGradient
-                  colors={['#34C759', '#30D158']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.gradientButton}
-                >
-                  <IconSymbol name="plus" size={20} color="#ffffff" />
-                </LinearGradient>
+                <IconSymbol name="plus" size={20} color={theme.success} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => router.push('/add-expense')}
-                activeOpacity={0.8}
-                style={styles.addButton}
+                activeOpacity={0.7}
+                style={[styles.addButton, { backgroundColor: theme.danger + '15' }]}
               >
-                <LinearGradient
-                  colors={['#FF3B30', '#FF453A']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.gradientButton}
-                >
-                  <IconSymbol name="minus" size={20} color="#ffffff" />
-                </LinearGradient>
+                <IconSymbol name="minus" size={20} color={theme.danger} />
               </TouchableOpacity>
             </View>
           </View>
@@ -245,23 +233,23 @@ export default function HomeScreen() {
 
         <ConfirmModal
           visible={deleteModalVisible}
-          title="Confirmar exclusão"
-          message={`Tem certeza que deseja excluir "${itemToDelete?.item.description || 'este item'}"? Esta ação não pode ser desfeita.`}
+          title="Excluir Transação"
+          message={`Tem certeza que deseja excluir "${itemToDelete?.item.description || 'esta transação'}"?`}
           confirmText="Excluir"
           cancelText="Cancelar"
           onConfirm={confirmDelete}
           onCancel={cancelDelete}
-          confirmColor="#EF4444"
+          confirmColor={theme.danger}
         />
       </View>
     </SafeAreaView>
   );
 }
 
-const getStyles = (isDark: boolean) => StyleSheet.create({
+const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: isDark ? '#000000' : '#F5F5F7',
+    backgroundColor: theme.background,
   },
   content: {
     flex: 1,
@@ -276,26 +264,26 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   titleSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: isDark ? '#FFFFFF' : '#000000',
-    letterSpacing: -0.6,
+    fontSize: 24,
+    fontWeight: '800',
+    color: theme.text,
+    letterSpacing: -0.8,
   },
   offlineBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: isDark ? '#78350F' : '#FEF3C7',
+    backgroundColor: isDark ? 'rgba(234, 179, 8, 0.2)' : '#FEF3C7',
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 8,
   },
   offlineDot: {
@@ -308,21 +296,16 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     fontSize: 9,
     fontWeight: '700',
     color: '#EAB308',
-    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   addButtons: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
   },
   addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    overflow: 'hidden',
-  },
-  gradientButton: {
-    width: '100%',
-    height: '100%',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -330,12 +313,12 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 30,
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     padding: 3,
     marginBottom: 16,
@@ -343,20 +326,23 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
   tab: {
     flex: 1,
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 9,
+    borderRadius: 10,
     alignItems: 'center',
   },
   tabActive: {
-    backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.9)',
+    backgroundColor: theme.card,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: isDark ? 0.2 : 0.03,
+    shadowRadius: 2,
+    elevation: 1,
   },
   tabText: {
     fontSize: 13,
     fontWeight: '600',
-    color: isDark ? '#8E8E93' : '#8E8E93',
+    color: theme.muted,
   },
   tabTextActive: {
-    color: isDark ? '#FFFFFF' : '#000000',
-    fontWeight: '600',
+    color: theme.text,
   },
 });

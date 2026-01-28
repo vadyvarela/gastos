@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { Category } from '@/lib/types/category';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Category } from '@/lib/types/category';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface CategoryFilterProps {
   categories: Category[];
@@ -10,14 +10,17 @@ interface CategoryFilterProps {
   onCategorySelect: (categoryId?: string) => void;
 }
 
+import { Colors } from '@/constants/theme';
+
 export function CategoryFilter({
   categories,
   selectedCategoryId,
   onCategorySelect,
 }: CategoryFilterProps) {
   const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
-  const styles = getStyles(isDark);
+  const styles = getStyles(isDark, theme);
 
   return (
     <View style={styles.container}>
@@ -32,7 +35,7 @@ export function CategoryFilter({
             styles.chip,
             !selectedCategoryId ? styles.chipSelected : styles.chipUnselected,
           ]}
-          activeOpacity={0.8}
+          activeOpacity={0.7}
         >
           <Text
             style={[
@@ -53,14 +56,18 @@ export function CategoryFilter({
               selectedCategoryId === category.id ? styles.chipSelected : styles.chipUnselected,
               selectedCategoryId === category.id && { borderColor: category.color },
             ]}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
           >
             <View style={styles.chipContent}>
-              <IconSymbol name={category.icon} size={16} color={selectedCategoryId === category.id ? category.color : (isDark ? '#94A3B8' : '#64748B')} />
+              <IconSymbol 
+                name={category.icon as any} 
+                size={14} 
+                color={selectedCategoryId === category.id ? category.color : theme.muted} 
+              />
               <Text
                 style={[
                   styles.chipText,
-                  { marginLeft: 8 },
+                  { marginLeft: 6 },
                   selectedCategoryId === category.id ? styles.chipTextSelected : styles.chipTextUnselected,
                   selectedCategoryId === category.id && { color: category.color },
                 ]}
@@ -75,7 +82,7 @@ export function CategoryFilter({
   );
 }
 
-const getStyles = (isDark: boolean) => StyleSheet.create({
+const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   container: {
     marginBottom: 0,
   },
@@ -84,34 +91,36 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     gap: 6,
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
     borderWidth: 1.5,
-    marginRight: 8,
-    minHeight: 40,
+    marginRight: 6,
+    minHeight: 36,
     justifyContent: 'center',
+    backgroundColor: theme.surface,
+    borderColor: theme.border,
   },
   chipSelected: {
-    backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-    borderColor: '#007AFF',
+    backgroundColor: theme.card,
+    borderColor: theme.tint,
   },
   chipUnselected: {
-    borderColor: isDark ? '#2C2C2E' : '#E5E5EA',
-    backgroundColor: isDark ? '#2C2C2E' : '#E5E5EA',
+    borderColor: 'transparent',
+    backgroundColor: theme.surface,
   },
   chipContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   chipText: {
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 12,
   },
   chipTextSelected: {
-    color: '#007AFF',
+    color: theme.tint,
   },
   chipTextUnselected: {
-    color: isDark ? '#94A3B8' : '#64748B',
+    color: theme.muted,
   },
 });

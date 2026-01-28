@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { IncomeFormData, incomeFormSchema } from '@/lib/types/income';
-import { useCategories } from '@/hooks/useCategories';
-import { formatDateInput } from '@/utils/date';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useCategories } from '@/hooks/useCategories';
+import { IncomeFormData, incomeFormSchema } from '@/lib/types/income';
+import { formatDateInput } from '@/utils/date';
+import { zodResolver } from '@hookform/resolvers/zod';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+import { Colors } from '@/constants/theme';
 
 interface IncomeFormProps {
   initialData?: Partial<IncomeFormData>;
@@ -21,8 +23,9 @@ export function IncomeForm({ initialData, onSubmit, onCancel, loading }: IncomeF
   const [showDatePicker, setShowDatePicker] = React.useState(false);
   const [date, setDate] = React.useState(new Date());
   const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
-  const styles = getStyles(isDark);
+  const styles = getStyles(isDark, theme);
 
   const {
     control,
@@ -67,9 +70,9 @@ export function IncomeForm({ initialData, onSubmit, onCancel, loading }: IncomeF
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.field}>
-          <Text style={styles.label}>Valor</Text>
+          <Text style={styles.label}>Quanto você recebeu?</Text>
           <Controller
             control={control}
             name="value"
@@ -87,29 +90,32 @@ export function IncomeForm({ initialData, onSubmit, onCancel, loading }: IncomeF
               }, [value]);
 
               return (
-                <TextInput
-                  style={styles.input}
-                  placeholder="0.00"
-                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                  keyboardType="decimal-pad"
-                  value={inputValue}
-                  onChangeText={(text) => {
-                    let cleaned = text.replace(/[^\d.,]/g, '');
-                    cleaned = cleaned.replace(',', '.');
-                    const dotIndex = cleaned.indexOf('.');
-                    if (dotIndex !== -1) {
-                      const before = cleaned.substring(0, dotIndex);
-                      const after = cleaned.substring(dotIndex + 1).replace(/\./g, '');
-                      cleaned = before + '.' + after;
-                      if (after.length > 2) {
-                        cleaned = before + '.' + after.substring(0, 2);
+                <View style={styles.inputContainer}>
+                  <Text style={styles.currencyPrefix}>R$</Text>
+                  <TextInput
+                    style={styles.valueInput}
+                    placeholder="0,00"
+                    placeholderTextColor={theme.muted}
+                    keyboardType="decimal-pad"
+                    value={inputValue}
+                    onChangeText={(text) => {
+                      let cleaned = text.replace(/[^\d.,]/g, '');
+                      cleaned = cleaned.replace(',', '.');
+                      const dotIndex = cleaned.indexOf('.');
+                      if (dotIndex !== -1) {
+                        const before = cleaned.substring(0, dotIndex);
+                        const after = cleaned.substring(dotIndex + 1).replace(/\./g, '');
+                        cleaned = before + '.' + after;
+                        if (after.length > 2) {
+                          cleaned = before + '.' + after.substring(0, 2);
+                        }
                       }
-                    }
-                    setInputValue(cleaned);
-                    const numericValue = parseFloat(cleaned) || 0;
-                    onChange(numericValue);
-                  }}
-                />
+                      setInputValue(cleaned);
+                      const numericValue = parseFloat(cleaned) || 0;
+                      onChange(numericValue);
+                    }}
+                  />
+                </View>
               );
             }}
           />
@@ -119,7 +125,7 @@ export function IncomeForm({ initialData, onSubmit, onCancel, loading }: IncomeF
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Categoria</Text>
+          <Text style={styles.label}>Em qual categoria?</Text>
           <Controller
             control={control}
             name="category_id"
@@ -130,17 +136,18 @@ export function IncomeForm({ initialData, onSubmit, onCancel, loading }: IncomeF
                     <TouchableOpacity
                       key={category.id}
                       onPress={() => onChange(category.id)}
+                      activeOpacity={0.7}
                       style={[
                         styles.categoryChip,
-                        value === category.id ? styles.categoryChipSelected : styles.categoryChipUnselected,
+                        value === category.id ? { borderColor: category.color, backgroundColor: theme.card } : { borderColor: 'transparent', backgroundColor: theme.surface },
                       ]}
                     >
                       <View style={styles.categoryChipContent}>
-                        <IconSymbol name={category.icon} size={18} color={category.color} />
+                        <IconSymbol name={category.icon as any} size={18} color={value === category.id ? category.color : theme.muted} />
                         <Text
                           style={[
                             styles.categoryChipText,
-                            value === category.id ? styles.categoryChipTextSelected : styles.categoryChipTextUnselected,
+                            { color: value === category.id ? category.color : theme.muted }
                           ]}
                         >
                           {category.name}
@@ -158,7 +165,7 @@ export function IncomeForm({ initialData, onSubmit, onCancel, loading }: IncomeF
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Data</Text>
+          <Text style={styles.label}>Quando foi isso?</Text>
           <Controller
             control={control}
             name="date"
@@ -167,9 +174,11 @@ export function IncomeForm({ initialData, onSubmit, onCancel, loading }: IncomeF
                 <TouchableOpacity
                   onPress={() => setShowDatePicker(true)}
                   style={styles.dateButton}
+                  activeOpacity={0.7}
                 >
+                  <IconSymbol name="calendar" size={18} color={theme.tint} />
                   <Text style={styles.dateText}>
-                    {new Date(value).toLocaleDateString('pt-BR')}
+                    {new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                   </Text>
                 </TouchableOpacity>
                 {showDatePicker && (
@@ -189,15 +198,15 @@ export function IncomeForm({ initialData, onSubmit, onCancel, loading }: IncomeF
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Descrição</Text>
+          <Text style={styles.label}>De onde veio esse dinheiro?</Text>
           <Controller
             control={control}
             name="description"
             render={({ field: { onChange, value } }) => (
               <TextInput
                 style={[styles.input, styles.textArea]}
-                placeholder="Descreva a receita..."
-                placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                placeholder="Ex: Salário, Freelance..."
+                placeholderTextColor={theme.muted}
                 multiline
                 numberOfLines={3}
                 value={value}
@@ -216,6 +225,7 @@ export function IncomeForm({ initialData, onSubmit, onCancel, loading }: IncomeF
               onPress={onCancel}
               style={[styles.button, styles.cancelButton]}
               disabled={loading}
+              activeOpacity={0.7}
             >
               <Text style={styles.cancelButtonText}>Cancelar</Text>
             </TouchableOpacity>
@@ -224,9 +234,10 @@ export function IncomeForm({ initialData, onSubmit, onCancel, loading }: IncomeF
             onPress={handleSubmit(onFormSubmit)}
             style={[styles.button, styles.submitButton]}
             disabled={loading}
+            activeOpacity={0.8}
           >
             <Text style={styles.submitButtonText}>
-              {loading ? 'Salvando...' : 'Salvar'}
+              {loading ? 'Processando...' : 'Registrar Receita'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -235,7 +246,7 @@ export function IncomeForm({ initialData, onSubmit, onCancel, loading }: IncomeF
   );
 }
 
-const getStyles = (isDark: boolean) => StyleSheet.create({
+const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -244,50 +255,73 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+    paddingBottom: 30,
   },
   field: {
     marginBottom: 16,
   },
   label: {
     fontSize: 13,
-    fontWeight: '600',
-    color: isDark ? '#D1D5DB' : '#374151',
+    fontWeight: '700',
+    color: theme.text,
     marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.surface,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 60,
+    borderWidth: 1.5,
+    borderColor: theme.border,
+  },
+  currencyPrefix: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: theme.muted,
+    marginRight: 6,
+  },
+  valueInput: {
+    flex: 1,
+    fontSize: 28,
+    fontWeight: '900',
+    color: theme.success,
+    letterSpacing: -0.5,
   },
   input: {
-    backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
-    borderWidth: 1,
-    borderColor: isDark ? '#4B5563' : '#E5E7EB',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    fontWeight: '500',
-    color: isDark ? '#FFFFFF' : '#111827',
+    backgroundColor: theme.surface,
+    borderWidth: 1.5,
+    borderColor: theme.border,
+    borderRadius: 16,
+    padding: 14,
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.text,
   },
   textArea: {
-    minHeight: 70,
+    minHeight: 80,
     textAlignVertical: 'top',
   },
   categoryScroll: {
-    marginBottom: 8,
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
   },
   categoryRow: {
     flexDirection: 'row',
     gap: 8,
+    paddingBottom: 4,
   },
   categoryChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1.5,
-  },
-  categoryChipSelected: {
-    borderColor: '#34C759',
-    backgroundColor: isDark ? '#2C2C2E' : '#E8F5E9',
-  },
-  categoryChipUnselected: {
-    borderColor: isDark ? '#4B5563' : '#E5E7EB',
-    backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   categoryChipContent: {
     flexDirection: 'row',
@@ -295,31 +329,30 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     gap: 6,
   },
   categoryChipText: {
-    marginLeft: 0,
-    fontWeight: '500',
+    fontWeight: '700',
     fontSize: 13,
   },
-  categoryChipTextSelected: {
-    color: isDark ? '#6EE7B7' : '#059669',
-  },
-  categoryChipTextUnselected: {
-    color: isDark ? '#D1D5DB' : '#374151',
-  },
   dateButton: {
-    backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
-    borderWidth: 1,
-    borderColor: isDark ? '#4B5563' : '#E5E7EB',
-    borderRadius: 10,
-    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: theme.surface,
+    borderWidth: 1.5,
+    borderColor: theme.border,
+    borderRadius: 16,
+    padding: 14,
   },
   dateText: {
-    color: isDark ? '#FFFFFF' : '#111827',
-    fontSize: 16,
+    color: theme.text,
+    fontSize: 15,
+    fontWeight: '600',
   },
   error: {
-    color: '#EF4444',
-    fontSize: 12,
-    marginTop: 4,
+    color: theme.danger,
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 6,
+    marginLeft: 4,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -328,24 +361,32 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
   },
   button: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   cancelButton: {
-    backgroundColor: isDark ? '#374151' : '#F3F4F6',
+    backgroundColor: theme.surface,
+    borderWidth: 1.5,
+    borderColor: theme.border,
   },
   cancelButtonText: {
-    color: isDark ? '#FFFFFF' : '#111827',
-    fontWeight: '600',
-    fontSize: 14,
+    color: theme.muted,
+    fontWeight: '700',
+    fontSize: 15,
   },
   submitButton: {
-    backgroundColor: '#34C759',
+    backgroundColor: theme.success,
+    shadowColor: theme.success,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   submitButtonText: {
     color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 14,
+    fontWeight: '800',
+    fontSize: 15,
   },
 });

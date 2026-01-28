@@ -1,12 +1,13 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Income } from '@/lib/types/income';
-import { useFormattedCurrency } from '@/hooks/useFormattedCurrency';
-import { useFormattedDate } from '@/hooks/useFormattedDate';
-import { useCategoryStore } from '@/stores/categoryStore';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useFormattedCurrency } from '@/hooks/useFormattedCurrency';
+import { useFormattedDate } from '@/hooks/useFormattedDate';
+import { Income } from '@/lib/types/income';
+import { useCategoryStore } from '@/stores/categoryStore';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { Colors } from '@/constants/theme';
 
 interface IncomeCardProps {
   income: Income;
@@ -19,32 +20,22 @@ export const IncomeCard = React.memo<IncomeCardProps>(({ income, onPress, onDele
   const formattedDate = useFormattedDate(income.date);
   const category = useCategoryStore(state => state.getCategoryById(income.category_id));
   const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
-  const styles = getStyles(isDark);
+  const styles = getStyles(isDark, theme);
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
       style={styles.cardWrapper}
     >
-      <LinearGradient
-        colors={isDark 
-          ? ['#1A1A1C', '#161618'] 
-          : ['#FFFFFF', '#FAFAFA']
-        }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.card}
-      >
+      <View style={styles.card}>
         <View style={styles.leftContent}>
           {category && (
-            <LinearGradient
-              colors={['#34C75920', '#34C75910']}
-              style={styles.iconWrapper}
-            >
-              <IconSymbol name={category.icon} size={20} color="#34C759" />
-            </LinearGradient>
+            <View style={[styles.iconWrapper, { backgroundColor: theme.success + '15' }]}>
+              <IconSymbol name={category.icon as any} size={20} color={theme.success} />
+            </View>
           )}
           <View style={styles.infoContainer}>
             <Text style={styles.title} numberOfLines={1}>
@@ -52,42 +43,48 @@ export const IncomeCard = React.memo<IncomeCardProps>(({ income, onPress, onDele
             </Text>
             <View style={styles.metaContainer}>
               <Text style={styles.categoryName}>{category?.name || 'Sem categoria'}</Text>
-              <Text style={styles.separator}>•</Text>
+              <View style={styles.dot} />
               <Text style={styles.date}>{formattedDate}</Text>
             </View>
           </View>
         </View>
         <View style={styles.rightContent}>
-          <Text style={styles.amount}>{formattedValue}</Text>
+          <Text style={[styles.amount, { color: theme.success }]}>+{formattedValue}</Text>
           {onDelete && (
             <TouchableOpacity
               onPress={onDelete}
               style={styles.deleteBtn}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <IconSymbol name="trash" size={14} color={isDark ? '#8E8E93' : '#8E8E93'} />
+              <IconSymbol name="trash" size={14} color={theme.muted} />
             </TouchableOpacity>
           )}
         </View>
-      </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 });
 
 IncomeCard.displayName = 'IncomeCard';
 
-const getStyles = (isDark: boolean) => StyleSheet.create({
+const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   cardWrapper: {
     marginBottom: 8,
   },
   card: {
+    backgroundColor: theme.card,
     borderRadius: 16,
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 0.5,
-    borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+    borderWidth: 1,
+    borderColor: theme.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0.15 : 0.02,
+    shadowRadius: 4,
+    elevation: 2,
   },
   leftContent: {
     flexDirection: 'row',
@@ -95,9 +92,9 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     flex: 1,
   },
   iconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -106,42 +103,45 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: isDark ? '#FFFFFF' : '#000000',
-    marginBottom: 4,
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.text,
+    marginBottom: 2,
     letterSpacing: -0.2,
   },
   metaContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
   },
   categoryName: {
     fontSize: 12,
-    color: isDark ? '#8E8E93' : '#8E8E93',
-    fontWeight: '500',
+    color: theme.muted,
+    fontWeight: '600',
   },
-  separator: {
-    fontSize: 12,
-    color: isDark ? '#8E8E93' : '#8E8E93',
+  dot: {
+    width: 2,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: theme.muted,
+    marginHorizontal: 6,
   },
   date: {
     fontSize: 12,
-    color: isDark ? '#8E8E93' : '#8E8E93',
+    color: theme.muted,
     fontWeight: '500',
   },
   rightContent: {
     alignItems: 'flex-end',
-    gap: 6,
+    gap: 4,
   },
   amount: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#34C759',
+    fontSize: 15,
+    fontWeight: '800',
     letterSpacing: -0.3,
   },
   deleteBtn: {
     padding: 4,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+    borderRadius: 6,
   },
 });

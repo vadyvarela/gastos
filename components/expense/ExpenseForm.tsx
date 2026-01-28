@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ExpenseFormData, expenseFormSchema } from '@/lib/types/expense';
-import { useCategories } from '@/hooks/useCategories';
-import { formatDateInput } from '@/utils/date';
-import { parseCurrency, formatCurrencyInput } from '@/utils/currency';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useCategories } from '@/hooks/useCategories';
+import { ExpenseFormData, expenseFormSchema } from '@/lib/types/expense';
+import { formatDateInput } from '@/utils/date';
+import { zodResolver } from '@hookform/resolvers/zod';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+import { Colors } from '@/constants/theme';
 
 interface ExpenseFormProps {
   initialData?: Partial<ExpenseFormData>;
@@ -22,8 +23,9 @@ export function ExpenseForm({ initialData, onSubmit, onCancel, loading }: Expens
   const [showDatePicker, setShowDatePicker] = React.useState(false);
   const [date, setDate] = React.useState(new Date());
   const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
-  const styles = getStyles(isDark);
+  const styles = getStyles(isDark, theme);
 
   const {
     control,
@@ -68,19 +70,17 @@ export function ExpenseForm({ initialData, onSubmit, onCancel, loading }: Expens
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.field}>
-          <Text style={styles.label}>Valor</Text>
+          <Text style={styles.label}>Quanto você gastou?</Text>
           <Controller
             control={control}
             name="value"
             render={({ field: { onChange, value } }) => {
-              // Estado local para o valor do input (string simples, sem formatação)
               const [inputValue, setInputValue] = useState(
                 value > 0 ? value.toString() : ''
               );
               
-              // Atualiza o input quando o value muda externamente
               useEffect(() => {
                 if (value > 0) {
                   setInputValue(value.toString());
@@ -90,39 +90,32 @@ export function ExpenseForm({ initialData, onSubmit, onCancel, loading }: Expens
               }, [value]);
 
               return (
-                <TextInput
-                  style={styles.input}
-                  placeholder="0.00"
-                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                  keyboardType="decimal-pad"
-                  value={inputValue}
-                  onChangeText={(text) => {
-                    // Permite apenas números e um ponto/vírgula para decimais
-                    let cleaned = text.replace(/[^\d.,]/g, '');
-                    
-                    // Normaliza vírgula para ponto
-                    cleaned = cleaned.replace(',', '.');
-                    
-                    // Garante apenas um ponto decimal
-                    const dotIndex = cleaned.indexOf('.');
-                    if (dotIndex !== -1) {
-                      const before = cleaned.substring(0, dotIndex);
-                      const after = cleaned.substring(dotIndex + 1).replace(/\./g, '');
-                      cleaned = before + '.' + after;
-                      
-                      // Limita a 2 casas decimais
-                      if (after.length > 2) {
-                        cleaned = before + '.' + after.substring(0, 2);
+                <View style={styles.inputContainer}>
+                  <Text style={styles.currencyPrefix}>R$</Text>
+                  <TextInput
+                    style={styles.valueInput}
+                    placeholder="0,00"
+                    placeholderTextColor={theme.muted}
+                    keyboardType="decimal-pad"
+                    value={inputValue}
+                    onChangeText={(text) => {
+                      let cleaned = text.replace(/[^\d.,]/g, '');
+                      cleaned = cleaned.replace(',', '.');
+                      const dotIndex = cleaned.indexOf('.');
+                      if (dotIndex !== -1) {
+                        const before = cleaned.substring(0, dotIndex);
+                        const after = cleaned.substring(dotIndex + 1).replace(/\./g, '');
+                        cleaned = before + '.' + after;
+                        if (after.length > 2) {
+                          cleaned = before + '.' + after.substring(0, 2);
+                        }
                       }
-                    }
-                    
-                    setInputValue(cleaned);
-                    
-                    // Converte para número
-                    const numericValue = parseFloat(cleaned) || 0;
-                    onChange(numericValue);
-                  }}
-                />
+                      setInputValue(cleaned);
+                      const numericValue = parseFloat(cleaned) || 0;
+                      onChange(numericValue);
+                    }}
+                  />
+                </View>
               );
             }}
           />
@@ -132,7 +125,7 @@ export function ExpenseForm({ initialData, onSubmit, onCancel, loading }: Expens
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Categoria</Text>
+          <Text style={styles.label}>Em qual categoria?</Text>
           <Controller
             control={control}
             name="category_id"
@@ -143,17 +136,18 @@ export function ExpenseForm({ initialData, onSubmit, onCancel, loading }: Expens
                     <TouchableOpacity
                       key={category.id}
                       onPress={() => onChange(category.id)}
+                      activeOpacity={0.7}
                       style={[
                         styles.categoryChip,
-                        value === category.id ? styles.categoryChipSelected : styles.categoryChipUnselected,
+                        value === category.id ? { borderColor: category.color, backgroundColor: theme.card } : { borderColor: 'transparent', backgroundColor: theme.surface },
                       ]}
                     >
                       <View style={styles.categoryChipContent}>
-                        <IconSymbol name={category.icon} size={20} color={category.color} />
+                        <IconSymbol name={category.icon as any} size={18} color={value === category.id ? category.color : theme.muted} />
                         <Text
                           style={[
                             styles.categoryChipText,
-                            value === category.id ? styles.categoryChipTextSelected : styles.categoryChipTextUnselected,
+                            { color: value === category.id ? category.color : theme.muted }
                           ]}
                         >
                           {category.name}
@@ -171,7 +165,7 @@ export function ExpenseForm({ initialData, onSubmit, onCancel, loading }: Expens
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Data</Text>
+          <Text style={styles.label}>Quando foi isso?</Text>
           <Controller
             control={control}
             name="date"
@@ -180,9 +174,11 @@ export function ExpenseForm({ initialData, onSubmit, onCancel, loading }: Expens
                 <TouchableOpacity
                   onPress={() => setShowDatePicker(true)}
                   style={styles.dateButton}
+                  activeOpacity={0.7}
                 >
+                  <IconSymbol name="calendar" size={18} color={theme.tint} />
                   <Text style={styles.dateText}>
-                    {new Date(value).toLocaleDateString('pt-BR')}
+                    {new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                   </Text>
                 </TouchableOpacity>
                 {showDatePicker && (
@@ -202,15 +198,15 @@ export function ExpenseForm({ initialData, onSubmit, onCancel, loading }: Expens
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Descrição</Text>
+          <Text style={styles.label}>O que você comprou?</Text>
           <Controller
             control={control}
             name="description"
             render={({ field: { onChange, value } }) => (
               <TextInput
                 style={[styles.input, styles.textArea]}
-                placeholder="Descreva o gasto..."
-                placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                placeholder="Ex: Almoço no shopping..."
+                placeholderTextColor={theme.muted}
                 multiline
                 numberOfLines={3}
                 value={value}
@@ -229,6 +225,7 @@ export function ExpenseForm({ initialData, onSubmit, onCancel, loading }: Expens
               onPress={onCancel}
               style={[styles.button, styles.cancelButton]}
               disabled={loading}
+              activeOpacity={0.7}
             >
               <Text style={styles.cancelButtonText}>Cancelar</Text>
             </TouchableOpacity>
@@ -237,9 +234,10 @@ export function ExpenseForm({ initialData, onSubmit, onCancel, loading }: Expens
             onPress={handleSubmit(onFormSubmit)}
             style={[styles.button, styles.submitButton]}
             disabled={loading}
+            activeOpacity={0.8}
           >
             <Text style={styles.submitButtonText}>
-              {loading ? 'Salvando...' : 'Salvar'}
+              {loading ? 'Processando...' : 'Registrar Gasto'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -248,7 +246,7 @@ export function ExpenseForm({ initialData, onSubmit, onCancel, loading }: Expens
   );
 }
 
-const getStyles = (isDark: boolean) => StyleSheet.create({
+const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -257,104 +255,138 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+    paddingBottom: 30,
   },
   field: {
     marginBottom: 16,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: isDark ? '#D1D5DB' : '#374151',
-    marginBottom: 10,
+    fontSize: 13,
+    fontWeight: '700',
+    color: theme.text,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.surface,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 60,
+    borderWidth: 1.5,
+    borderColor: theme.border,
+  },
+  currencyPrefix: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: theme.muted,
+    marginRight: 6,
+  },
+  valueInput: {
+    flex: 1,
+    fontSize: 28,
+    fontWeight: '900',
+    color: theme.danger,
+    letterSpacing: -0.5,
   },
   input: {
-    backgroundColor: isDark ? '#1A1F2E' : '#FFFFFF',
+    backgroundColor: theme.surface,
     borderWidth: 1.5,
-    borderColor: isDark ? '#2A2F3F' : '#E2E8F0',
-    borderRadius: 12,
+    borderColor: theme.border,
+    borderRadius: 16,
     padding: 14,
     fontSize: 15,
-    fontWeight: '500',
-    color: isDark ? '#F8FAFC' : '#0F172A',
+    fontWeight: '600',
+    color: theme.text,
   },
   textArea: {
-    minHeight: 60,
+    minHeight: 80,
     textAlignVertical: 'top',
   },
   categoryScroll: {
-    marginBottom: 8,
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
   },
   categoryRow: {
     flexDirection: 'row',
     gap: 8,
+    paddingBottom: 4,
   },
   categoryChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    borderWidth: 1.5,
-  },
-  categoryChipSelected: {
-    borderColor: '#FF3B30',
-    backgroundColor: isDark ? '#2C2C2E' : '#FFEBEE',
-  },
-  categoryChipUnselected: {
-    borderColor: isDark ? '#334155' : '#E2E8F0',
-    backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   categoryChipContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
   categoryChipText: {
-    marginLeft: 8,
-    fontWeight: '500',
-  },
-  categoryChipTextSelected: {
-    color: isDark ? '#FCA5A5' : '#DC2626',
-  },
-  categoryChipTextUnselected: {
-    color: isDark ? '#D1D5DB' : '#374151',
+    fontWeight: '700',
+    fontSize: 13,
   },
   dateButton: {
-    backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
-    borderWidth: 1,
-    borderColor: isDark ? '#334155' : '#E2E8F0',
-    borderRadius: 10,
-    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: theme.surface,
+    borderWidth: 1.5,
+    borderColor: theme.border,
+    borderRadius: 16,
+    padding: 14,
   },
   dateText: {
-    color: isDark ? '#FFFFFF' : '#111827',
-    fontSize: 16,
+    color: theme.text,
+    fontSize: 15,
+    fontWeight: '600',
   },
   error: {
-    color: '#EF4444',
-    fontSize: 12,
-    marginTop: 4,
+    color: theme.danger,
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 6,
+    marginLeft: 4,
   },
   buttonRow: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 6,
+    marginTop: 8,
   },
   button: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 14,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   cancelButton: {
-    backgroundColor: isDark ? '#374151' : '#E5E7EB',
+    backgroundColor: theme.surface,
+    borderWidth: 1.5,
+    borderColor: theme.border,
   },
   cancelButtonText: {
-    color: isDark ? '#FFFFFF' : '#111827',
-    fontWeight: '600',
+    color: theme.muted,
+    fontWeight: '700',
+    fontSize: 15,
   },
   submitButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: theme.danger,
+    shadowColor: theme.danger,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   submitButtonText: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: '800',
+    fontSize: 15,
   },
 });

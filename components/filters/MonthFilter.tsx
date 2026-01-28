@@ -1,18 +1,21 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { formatMonth, getPreviousMonth, getNextMonth } from '@/utils/date';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { formatMonth, getNextMonth, getPreviousMonth } from '@/utils/date';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface MonthFilterProps {
   currentMonth: string;
   onMonthChange: (month: string) => void;
 }
 
+import { Colors } from '@/constants/theme';
+
 export function MonthFilter({ currentMonth, onMonthChange }: MonthFilterProps) {
   const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
-  const styles = getStyles(isDark);
+  const styles = getStyles(isDark, theme);
 
   const handlePrevious = () => {
     onMonthChange(getPreviousMonth(currentMonth));
@@ -28,9 +31,9 @@ export function MonthFilter({ currentMonth, onMonthChange }: MonthFilterProps) {
         onPress={handlePrevious} 
         style={styles.button}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        activeOpacity={0.7}
+        activeOpacity={0.6}
       >
-        <IconSymbol name="chevron.left" size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+        <IconSymbol name="chevron.left" size={16} color={theme.text} />
       </TouchableOpacity>
       
       <Text style={styles.monthText}>{formatMonth(currentMonth)}</Text>
@@ -39,34 +42,41 @@ export function MonthFilter({ currentMonth, onMonthChange }: MonthFilterProps) {
         onPress={handleNext} 
         style={styles.button}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        activeOpacity={0.7}
+        activeOpacity={0.6}
       >
-        <IconSymbol name="chevron.right" size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+        <IconSymbol name="chevron.right" size={16} color={theme.text} />
       </TouchableOpacity>
     </View>
   );
 }
 
-const getStyles = (isDark: boolean) => StyleSheet.create({
+const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: isDark ? '#2C2C2E' : '#E5E5EA',
+    backgroundColor: theme.surface,
     borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-    borderWidth: 0,
+    padding: 6,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: theme.border,
   },
   button: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+    padding: 6,
+    borderRadius: 10,
+    backgroundColor: theme.card,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: isDark ? 0.15 : 0.02,
+    shadowRadius: 2,
+    elevation: 1,
   },
   monthText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: isDark ? '#FFFFFF' : '#000000',
-    letterSpacing: -0.2,
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.text,
+    letterSpacing: -0.3,
+    textTransform: 'capitalize',
   },
 });

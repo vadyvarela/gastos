@@ -1,12 +1,14 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useFormattedCurrency } from '@/hooks/useFormattedCurrency';
 import { Expense } from '@/lib/types/expense';
 import { Income } from '@/lib/types/income';
-import { useFormattedCurrency } from '@/hooks/useFormattedCurrency';
 import { useCategoryStore } from '@/stores/categoryStore';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useMemo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+
+import { Colors } from '@/constants/theme';
 
 interface SummaryCardProps {
   expenses: Expense[];
@@ -17,8 +19,9 @@ interface SummaryCardProps {
 export function SummaryCard({ expenses, incomes = [], month }: SummaryCardProps) {
   const { getCategoryById } = useCategoryStore();
   const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
-  const styles = getStyles(isDark);
+  const styles = getStyles(isDark, theme);
 
   const totalExpenses = useMemo(() => {
     return expenses.reduce((sum, exp) => sum + exp.value, 0);
@@ -56,8 +59,8 @@ export function SummaryCard({ expenses, incomes = [], month }: SummaryCardProps)
   return (
     <LinearGradient
       colors={isDark 
-        ? ['#1A1A1C', '#161618'] 
-        : ['#FFFFFF', '#FAFAFA']
+        ? [theme.card, theme.surface] 
+        : [theme.card, '#F1F5F9']
       }
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
@@ -65,30 +68,24 @@ export function SummaryCard({ expenses, incomes = [], month }: SummaryCardProps)
     >
       <View style={styles.mainBalance}>
         <Text style={styles.balanceLabel}>Saldo do Mês</Text>
-        <Text style={[styles.balanceAmount, { color: balance >= 0 ? '#34C759' : '#FF3B30' }]}>
+        <Text style={[styles.balanceAmount, { color: balance >= 0 ? theme.success : theme.danger }]}>
           {balance >= 0 ? '+' : '-'}{formattedBalance}
         </Text>
       </View>
       
       <View style={styles.statsRow}>
-        <LinearGradient
-          colors={['#34C75915', '#34C75905']}
-          style={styles.statBox}
-        >
+        <View style={[styles.statBox, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)' }]}>
           <Text style={styles.statLabel}>Receitas</Text>
-          <Text style={[styles.statValue, { color: '#34C759' }]}>
+          <Text style={[styles.statValue, { color: theme.success }]}>
             {formattedTotalIncomes}
           </Text>
-        </LinearGradient>
-        <LinearGradient
-          colors={['#FF3B3015', '#FF3B3005']}
-          style={styles.statBox}
-        >
+        </View>
+        <View style={[styles.statBox, { backgroundColor: isDark ? 'rgba(244, 63, 94, 0.1)' : 'rgba(244, 63, 94, 0.05)' }]}>
           <Text style={styles.statLabel}>Gastos</Text>
-          <Text style={[styles.statValue, { color: '#FF3B30' }]}>
+          <Text style={[styles.statValue, { color: theme.danger }]}>
             {formattedTotalExpenses}
           </Text>
-        </LinearGradient>
+        </View>
       </View>
 
       {totalByCategory.length > 0 && (
@@ -98,12 +95,9 @@ export function SummaryCard({ expenses, incomes = [], month }: SummaryCardProps)
             <View key={item.category?.id} style={styles.categoryRow}>
               <View style={styles.categoryInfo}>
                 {item.category && (
-                  <LinearGradient
-                    colors={[item.category.color + '20', item.category.color + '10']}
-                    style={styles.categoryIcon}
-                  >
-                    <IconSymbol name={item.category.icon} size={14} color={item.category.color} />
-                  </LinearGradient>
+                  <View style={[styles.categoryIcon, { backgroundColor: item.category.color + '20' }]}>
+                    <IconSymbol name={item.category.icon as any} size={14} color={item.category.color} />
+                  </View>
                 )}
                 <Text style={styles.categoryName} numberOfLines={1}>
                   {item.category?.name}
@@ -120,30 +114,37 @@ export function SummaryCard({ expenses, incomes = [], month }: SummaryCardProps)
   );
 }
 
-const getStyles = (isDark: boolean) => StyleSheet.create({
+const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   card: {
     borderRadius: 20,
     padding: 16,
     marginBottom: 16,
-    borderWidth: 0.5,
-    borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+    borderWidth: 1,
+    borderColor: theme.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: isDark ? 0.2 : 0.03,
+    shadowRadius: 12,
+    elevation: 5,
   },
   mainBalance: {
     marginBottom: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+    borderBottomColor: theme.border,
   },
   balanceLabel: {
     fontSize: 12,
-    color: isDark ? '#8E8E93' : '#8E8E93',
-    fontWeight: '500',
-    marginBottom: 6,
+    color: theme.muted,
+    fontWeight: '600',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   balanceAmount: {
-    fontSize: 32,
-    fontWeight: '700',
-    letterSpacing: -0.8,
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -1,
   },
   statsRow: {
     flexDirection: 'row',
@@ -152,40 +153,42 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 12,
+    padding: 12,
   },
   statLabel: {
-    fontSize: 12,
-    color: isDark ? '#8E8E93' : '#8E8E93',
-    fontWeight: '500',
-    marginBottom: 6,
+    fontSize: 11,
+    color: theme.muted,
+    fontWeight: '600',
+    marginBottom: 2,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '700',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   categoriesSection: {
-    marginTop: 4,
+    marginTop: 0,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: isDark ? '#FFFFFF' : '#000000',
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.text,
     marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   categoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   categoryInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    gap: 10,
+    gap: 8,
   },
   categoryIcon: {
     width: 28,
@@ -195,14 +198,14 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     justifyContent: 'center',
   },
   categoryName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: isDark ? '#FFFFFF' : '#000000',
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.text,
     flex: 1,
   },
   categoryValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: isDark ? '#FFFFFF' : '#000000',
+    fontSize: 13,
+    fontWeight: '700',
+    color: theme.text,
   },
 });

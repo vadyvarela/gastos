@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useIncomeById } from '@/hooks/useIncomes';
 import { IncomeForm } from '@/components/income/IncomeForm';
-import { IncomeFormData } from '@/lib/types/income';
-import { useIncomeStore } from '@/stores/incomeStore';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { showToast } from '@/components/ui/Toast';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useFormattedCurrency } from '@/hooks/useFormattedCurrency';
 import { useFormattedDate } from '@/hooks/useFormattedDate';
+import { useIncomeById } from '@/hooks/useIncomes';
+import { IncomeFormData } from '@/lib/types/income';
 import { useCategoryStore } from '@/stores/categoryStore';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { showToast } from '@/components/ui/Toast';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { useIncomeStore } from '@/stores/incomeStore';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function IncomeDetailScreen() {
   const router = useRouter();
@@ -24,8 +25,9 @@ export default function IncomeDetailScreen() {
   const [loading, setLoading] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const isDark = colorScheme === 'dark';
-  const styles = getStyles(isDark);
+  const styles = getStyles(isDark, theme);
 
   if (!income) {
     return (
@@ -94,30 +96,30 @@ export default function IncomeDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <IconSymbol name="chevron.left" size={22} color={isDark ? '#D1D5DB' : '#374151'} />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <IconSymbol name="chevron.left" size={24} color={theme.text} />
         </TouchableOpacity>
         <View style={styles.headerActions}>
-          <TouchableOpacity onPress={() => setIsEditing(true)}>
-            <IconSymbol name="pencil" size={22} color="#3B82F6" />
+          <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.actionButton}>
+            <IconSymbol name="pencil" size={20} color={theme.tint} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-            <IconSymbol name="trash" size={22} color="#EF4444" />
+          <TouchableOpacity onPress={handleDelete} style={[styles.actionButton, styles.deleteButton]}>
+            <IconSymbol name="trash" size={20} color={theme.danger} />
           </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             {category && (
               <View
-                style={[styles.categoryIconLarge, { backgroundColor: '#10B98120' }]}
+                style={[styles.categoryIconLarge, { backgroundColor: theme.success + '15' }]}
               >
-                <IconSymbol name={category.icon} size={32} color="#10B981" />
+                <IconSymbol name={category.icon as any} size={32} color={theme.success} />
               </View>
             )}
-            <Text style={styles.value}>{formattedValue}</Text>
+            <Text style={[styles.value, { color: theme.success }]}>+{formattedValue}</Text>
             <Text style={styles.description}>{income.description}</Text>
           </View>
 
@@ -133,7 +135,8 @@ export default function IncomeDetailScreen() {
               <Text style={styles.infoValue}>{formattedDate}</Text>
             </View>
             {!income.synced && (
-              <View style={styles.infoRow}>
+              <View style={styles.syncRow}>
+                <IconSymbol name="tray" size={14} color="#EAB308" />
                 <Text style={styles.syncText}>
                   Aguardando sincronização
                 </Text>
@@ -145,38 +148,53 @@ export default function IncomeDetailScreen() {
 
       <ConfirmModal
         visible={deleteModalVisible}
-        title="Confirmar exclusão"
-        message={`Tem certeza que deseja excluir "${income.description}"? Esta ação não pode ser desfeita.`}
+        title="Excluir Receita"
+        message={`Tem certeza que deseja excluir "${income.description}"?`}
         confirmText="Excluir"
         cancelText="Cancelar"
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
-        confirmColor="#EF4444"
+        confirmColor={theme.danger}
       />
     </SafeAreaView>
   );
 }
 
-const getStyles = (isDark: boolean) => StyleSheet.create({
+const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: isDark ? '#000000' : '#F2F2F7',
+    backgroundColor: theme.background,
   },
   header: {
-    backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomWidth: 0,
+    backgroundColor: theme.background,
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.surface,
   },
   headerActions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
+  },
+  actionButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.surface,
   },
   deleteButton: {
-    marginLeft: 0,
+    backgroundColor: theme.danger + '10',
   },
   scrollView: {
     flex: 1,
@@ -185,60 +203,78 @@ const getStyles = (isDark: boolean) => StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+    backgroundColor: theme.card,
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: isDark ? '#2C2C2E' : '#F0F0F0',
+    borderColor: theme.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: isDark ? 0.2 : 0.04,
+    shadowRadius: 12,
+    elevation: 6,
   },
   cardHeader: {
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 20,
   },
   categoryIconLarge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   value: {
-    fontSize: 42,
-    fontWeight: '700',
-    color: '#34C759',
-    marginBottom: 8,
-    letterSpacing: -1,
+    fontSize: 36,
+    fontWeight: '900',
+    marginBottom: 4,
+    letterSpacing: -1.5,
   },
   description: {
-    fontSize: 14,
-    color: isDark ? '#94A3B8' : '#64748B',
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.text,
+    textAlign: 'center',
   },
   divider: {
     borderTopWidth: 1,
-    borderTopColor: isDark ? '#334155' : '#F1F5F9',
-    paddingTop: 12,
+    borderTopColor: theme.border,
+    paddingTop: 20,
+    marginTop: 4,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   infoLabel: {
     fontSize: 12,
-    color: isDark ? '#94A3B8' : '#64748B',
-    fontWeight: '500',
+    color: theme.muted,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   infoValue: {
     fontSize: 14,
-    fontWeight: '600',
-    color: isDark ? '#FFFFFF' : '#111827',
+    fontWeight: '700',
+    color: theme.text,
+  },
+  syncRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 8,
+    backgroundColor: isDark ? 'rgba(234, 179, 8, 0.1)' : '#FEF3C7',
+    padding: 10,
+    borderRadius: 10,
   },
   syncText: {
     fontSize: 12,
-    color: '#EAB308',
-    fontWeight: '500',
+    color: '#D97706',
+    fontWeight: '700',
   },
 });
