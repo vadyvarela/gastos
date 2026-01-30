@@ -87,16 +87,16 @@ const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
     marginBottom: 0,
   },
   scrollContent: {
-    paddingRight: 16,
-    gap: 6,
+    paddingRight: 20,
+    gap: 8,
   },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
     borderWidth: 1.5,
-    marginRight: 6,
-    minHeight: 36,
+    marginRight: 8,
+    minHeight: 40,
     justifyContent: 'center',
     backgroundColor: theme.surface,
     borderColor: theme.border,
@@ -115,7 +115,7 @@ const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   },
   chipText: {
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: 13,
   },
   chipTextSelected: {
     color: theme.tint,

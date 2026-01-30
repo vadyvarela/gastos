@@ -1,17 +1,17 @@
 /**
- * Formata um valor numérico como moeda brasileira (BRL)
+ * Formata um valor numérico como moeda de Cabo Verde (CVE)
  */
 export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-CVE', {
-    style: 'currency',
-    currency: 'CVE',
-    currencyDisplay: 'symbol',
-  }).format(value);
+  // CVE não costuma usar centavos na exibição comum, mas vamos manter 2 casas decimais
+  return `CVE ${value.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 /**
  * Converte uma string de moeda para número
- * Ex: "R$ 1.234,56" -> 1234.56
+ * Ex: "CVE 1.234,56" -> 1234.56
  */
 export function parseCurrency(value: string): number {
   // Remove tudo exceto números, vírgula e ponto

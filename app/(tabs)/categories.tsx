@@ -27,7 +27,7 @@ export default function CategoriesScreen() {
 
   const handleDelete = async (category: Category) => {
     if (category.is_default) {
-      showToast('error', 'Não é possível excluir categorias padrão');
+      showToast('error', 'Não é possível excluir categorias do sistema');
       return;
     }
 
@@ -107,7 +107,7 @@ export default function CategoriesScreen() {
       >
         {defaultCategories.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Categorias Padrão</Text>
+            <Text style={styles.sectionTitle}>Categorias do Sistema</Text>
             {defaultCategories.map((category) => (
               <CategoryItem 
                 key={category.id} 
@@ -193,7 +193,7 @@ function CategoryItem({ category, onDelete, onEdit, theme, isDark }: CategoryIte
         <View
           style={[styles.iconContainer, { backgroundColor: category.color + '15' }]}
         >
-          <IconSymbol name={category.icon as any} size={22} color={category.color} />
+          <IconSymbol name={category.icon as any} size={24} color={category.color} />
         </View>
         <View style={styles.textSection}>
           <Text style={styles.name}>{category.name}</Text>
@@ -208,7 +208,7 @@ function CategoryItem({ category, onDelete, onEdit, theme, isDark }: CategoryIte
             <IconSymbol name="pencil" size={16} color={theme.tint} />
           </TouchableOpacity>
         )}
-        {onDelete && (
+        {!category.is_default && onDelete && (
           <TouchableOpacity onPress={onDelete} style={[styles.actionButton, styles.deleteButton]} activeOpacity={0.6}>
             <IconSymbol name="trash" size={16} color={theme.danger} />
           </TouchableOpacity>
@@ -224,9 +224,9 @@ const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
     backgroundColor: theme.background,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
   },
   headerTop: {
     flexDirection: 'row',
@@ -234,39 +234,39 @@ const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
     justifyContent: 'space-between',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '800',
     color: theme.text,
-    letterSpacing: -0.8,
+    letterSpacing: -1,
   },
   addButton: {
     backgroundColor: theme.tint,
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: theme.tint,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 30,
+    padding: 20,
+    paddingBottom: 40,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
-    color: theme.muted,
-    marginBottom: 12,
+    color: theme.text,
+    marginBottom: 16,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -274,33 +274,34 @@ const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: theme.border,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     color: theme.text,
+    letterSpacing: -0.5,
   },
 });
 
 const getItemStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   card: {
     backgroundColor: theme.card,
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 8,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: theme.border,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: isDark ? 0.15 : 0.02,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: isDark ? 0.2 : 0.02,
+    shadowRadius: 8,
+    elevation: 3,
   },
   leftSection: {
     flexDirection: 'row',
@@ -308,42 +309,42 @@ const getItemStyles = (isDark: boolean, theme: any) => StyleSheet.create({
     flex: 1,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
   textSection: {
     flex: 1,
   },
   name: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
     color: theme.text,
-    letterSpacing: -0.2,
+    letterSpacing: -0.3,
   },
   defaultLabel: {
-    fontSize: 10,
+    fontSize: 11,
     color: theme.muted,
-    marginTop: 1,
-    fontWeight: '600',
+    marginTop: 2,
+    fontWeight: '700',
     textTransform: 'uppercase',
   },
   actions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
   },
   actionButton: {
-    padding: 8,
-    borderRadius: 10,
+    padding: 10,
+    borderRadius: 12,
     backgroundColor: theme.surface,
   },
   editButton: {
-    backgroundColor: theme.tint + '10',
+    backgroundColor: theme.tint + '15',
   },
   deleteButton: {
-    backgroundColor: theme.danger + '10',
+    backgroundColor: theme.danger + '15',
   },
 });

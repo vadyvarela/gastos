@@ -144,7 +144,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View style={styles.titleSection}>
-              <Text style={styles.title}>Minhas Finanças</Text>
+              <Text style={styles.title}>Visão Geral</Text>
               {!isOnline && (
                 <View style={styles.offlineBadge}>
                   <View style={styles.offlineDot} />
@@ -156,16 +156,16 @@ export default function HomeScreen() {
               <TouchableOpacity
                 onPress={() => router.push('/add-income')}
                 activeOpacity={0.7}
-                style={[styles.addButton, { backgroundColor: theme.success + '15' }]}
+                style={[styles.addButton, { backgroundColor: theme.success }]}
               >
-                <IconSymbol name="plus" size={20} color={theme.success} />
+                <IconSymbol name="plus" size={20} color="#FFFFFF" />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => router.push('/add-expense')}
                 activeOpacity={0.7}
-                style={[styles.addButton, { backgroundColor: theme.danger + '15' }]}
+                style={[styles.addButton, { backgroundColor: theme.danger }]}
               >
-                <IconSymbol name="minus" size={20} color={theme.danger} />
+                <IconSymbol name="minus" size={20} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           </View>
@@ -195,7 +195,7 @@ export default function HomeScreen() {
                 activeOpacity={0.7}
               >
                 <Text style={[styles.tabText, activeTab === 'expenses' && styles.tabTextActive]}>
-                  Gastos ({filteredExpenses.length})
+                  Gastos
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -204,7 +204,7 @@ export default function HomeScreen() {
                 activeOpacity={0.7}
               >
                 <Text style={[styles.tabText, activeTab === 'incomes' && styles.tabTextActive]}>
-                  Receitas ({filteredIncomes.length})
+                  Receitas
                 </Text>
               </TouchableOpacity>
             </View>
@@ -255,57 +255,57 @@ const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
     borderBottomWidth: 0,
   },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   titleSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '800',
     color: theme.text,
-    letterSpacing: -0.8,
+    letterSpacing: -1,
   },
   offlineBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: isDark ? 'rgba(234, 179, 8, 0.2)' : '#FEF3C7',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   offlineDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: '#EAB308',
   },
   offlineText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
     color: '#EAB308',
     textTransform: 'uppercase',
   },
   addButtons: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
   },
   addButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -313,32 +313,32 @@ const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 30,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
   },
   tabs: {
     flexDirection: 'row',
     backgroundColor: theme.surface,
-    borderRadius: 12,
-    padding: 3,
-    marginBottom: 16,
+    borderRadius: 16,
+    padding: 4,
+    marginBottom: 20,
   },
   tab: {
     flex: 1,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingVertical: 10,
+    borderRadius: 12,
     alignItems: 'center',
   },
   tabActive: {
     backgroundColor: theme.card,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: isDark ? 0.2 : 0.03,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0.2 : 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   tabText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: theme.muted,
   },

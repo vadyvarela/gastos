@@ -4,7 +4,6 @@ import { useFormattedCurrency } from '@/hooks/useFormattedCurrency';
 import { Expense } from '@/lib/types/expense';
 import { Income } from '@/lib/types/income';
 import { useCategoryStore } from '@/stores/categoryStore';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -57,31 +56,23 @@ export function SummaryCard({ expenses, incomes = [], month }: SummaryCardProps)
   const formattedBalance = useFormattedCurrency(Math.abs(balance));
 
   return (
-    <LinearGradient
-      colors={isDark 
-        ? [theme.card, theme.surface] 
-        : [theme.card, '#F1F5F9']
-      }
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.card}
-    >
+    <View style={styles.card}>
       <View style={styles.mainBalance}>
-        <Text style={styles.balanceLabel}>Saldo do Mês</Text>
-        <Text style={[styles.balanceAmount, { color: balance >= 0 ? theme.success : theme.danger }]}>
-          {balance >= 0 ? '+' : '-'}{formattedBalance}
+        <Text style={styles.balanceLabel}>Saldo Total</Text>
+        <Text style={[styles.balanceAmount, { color: theme.text }]}>
+          {balance >= 0 ? '' : '-'}{formattedBalance}
         </Text>
       </View>
       
       <View style={styles.statsRow}>
-        <View style={[styles.statBox, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)' }]}>
+        <View style={[styles.statBox, { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }]}>
           <Text style={styles.statLabel}>Receitas</Text>
           <Text style={[styles.statValue, { color: theme.success }]}>
             {formattedTotalIncomes}
           </Text>
         </View>
-        <View style={[styles.statBox, { backgroundColor: isDark ? 'rgba(244, 63, 94, 0.1)' : 'rgba(244, 63, 94, 0.05)' }]}>
-          <Text style={styles.statLabel}>Gastos</Text>
+        <View style={[styles.statBox, { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }]}>
+          <Text style={styles.statLabel}>Despesas</Text>
           <Text style={[styles.statValue, { color: theme.danger }]}>
             {formattedTotalExpenses}
           </Text>
@@ -90,13 +81,13 @@ export function SummaryCard({ expenses, incomes = [], month }: SummaryCardProps)
 
       {totalByCategory.length > 0 && (
         <View style={styles.categoriesSection}>
-          <Text style={styles.sectionTitle}>Principais Categorias</Text>
+          <Text style={styles.sectionTitle}>Maiores Gastos</Text>
           {totalByCategory.map((item) => (
             <View key={item.category?.id} style={styles.categoryRow}>
               <View style={styles.categoryInfo}>
                 {item.category && (
-                  <View style={[styles.categoryIcon, { backgroundColor: item.category.color + '20' }]}>
-                    <IconSymbol name={item.category.icon as any} size={14} color={item.category.color} />
+                  <View style={[styles.categoryIcon, { backgroundColor: item.category.color + '15' }]}>
+                    <IconSymbol name={item.category.icon as any} size={16} color={item.category.color} />
                   </View>
                 )}
                 <Text style={styles.categoryName} numberOfLines={1}>
@@ -110,71 +101,71 @@ export function SummaryCard({ expenses, incomes = [], month }: SummaryCardProps)
           ))}
         </View>
       )}
-    </LinearGradient>
+    </View>
   );
 }
 
 const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
   card: {
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: theme.border,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: isDark ? 0.2 : 0.03,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: isDark ? 0.3 : 0.05,
+    shadowRadius: 20,
+    elevation: 10,
   },
   mainBalance: {
-    marginBottom: 16,
-    paddingBottom: 16,
+    marginBottom: 20,
+    paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: theme.border,
   },
   balanceLabel: {
+    fontSize: 14,
+    color: theme.muted,
+    fontWeight: '600',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  balanceAmount: {
+    fontSize: 36,
+    fontWeight: '800',
+    letterSpacing: -1.5,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  statBox: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
+  },
+  statLabel: {
     fontSize: 12,
     color: theme.muted,
     fontWeight: '600',
     marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  balanceAmount: {
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -1,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
-  statBox: {
-    flex: 1,
-    borderRadius: 12,
-    padding: 12,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: theme.muted,
-    fontWeight: '600',
-    marginBottom: 2,
   },
   statValue: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
   categoriesSection: {
-    marginTop: 0,
+    marginTop: 4,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
     color: theme.text,
-    marginBottom: 12,
+    marginBottom: 16,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -182,29 +173,29 @@ const getStyles = (isDark: boolean, theme: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 14,
   },
   categoryInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    gap: 8,
+    gap: 12,
   },
   categoryIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   categoryName: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '600',
     color: theme.text,
     flex: 1,
   },
   categoryValue: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '700',
     color: theme.text,
   },
