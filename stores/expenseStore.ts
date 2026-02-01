@@ -1,9 +1,10 @@
 import { create } from 'zustand';
+import { Platform } from 'react-native';
 import { Expense } from '@/lib/types/expense';
 import { executeQuery, executeInsert, executeUpdate } from '@/lib/sqlite';
 import { executeTursoQuery } from '@/lib/turso';
 import { useSyncStore } from './syncStore';
-import { normalizeExpenses } from '@/utils/database';
+import { normalizeExpenses, normalizeExpense } from '@/utils/database';
 
 interface ExpenseStore {
   expenses: Expense[];
@@ -75,7 +76,7 @@ export const useExpenseStore = create<ExpenseStore>((set, get) => ({
         id,
         created_at: now,
         updated_at: now,
-        synced: false,
+        synced: Platform.OS === 'web',
       };
 
       const result = await executeInsert(
@@ -94,7 +95,7 @@ export const useExpenseStore = create<ExpenseStore>((set, get) => ({
 
       if (result.success) {
         // Add to sync queue
-        await useSyncStore.getState().addToSyncQueue('expenses', expense.id, 'INSERT', expense);
+        await useSyncStore.getState().addToSyncQueue('expenses', id, 'INSERT', expense);
         
         // Refresh expenses
         await get().fetchExpenses();

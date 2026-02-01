@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Platform } from 'react-native';
 import { Income } from '@/lib/types/income';
 import { executeQuery, executeInsert, executeUpdate } from '@/lib/sqlite';
 import { useSyncStore } from './syncStore';
@@ -74,7 +75,7 @@ export const useIncomeStore = create<IncomeStore>((set, get) => ({
         id,
         created_at: now,
         updated_at: now,
-        synced: false,
+        synced: Platform.OS === 'web',
       };
 
       const result = await executeInsert(
@@ -92,7 +93,7 @@ export const useIncomeStore = create<IncomeStore>((set, get) => ({
       );
 
       if (result.success) {
-        await useSyncStore.getState().addToSyncQueue('incomes', income.id, 'INSERT', income);
+        await useSyncStore.getState().addToSyncQueue('incomes', id, 'INSERT', income);
         await get().fetchIncomes();
         return true;
       }

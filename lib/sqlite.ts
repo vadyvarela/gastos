@@ -1,9 +1,13 @@
 import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
 import { categoriesTable, expensesTable, incomesTable, syncQueueTable, createIndexes } from './db/schema';
+import { executeTursoQuery, executeTursoTransaction } from './turso';
 
 let db: SQLite.SQLiteDatabase | null = null;
 
-export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
+export async function getDatabase(): Promise<SQLite.SQLiteDatabase | null> {
+  if (Platform.OS === 'web') return null;
+  
   if (!db) {
     db = await SQLite.openDatabaseAsync('gasto.db');
     await initializeDatabase();
@@ -117,8 +121,14 @@ export async function executeQuery<T = unknown>(
   args: unknown[] = []
 ): Promise<{ success: boolean; data?: T[]; error?: string }> {
   try {
+    if (Platform.OS === 'web') {
+      return await executeTursoQuery<T>(sql, args);
+    }
+
     const database = await getDatabase();
-    const result = await database.getAllAsync<T>(sql, args);
+    if (!database) throw new Error('Database not available');
+    
+    const result = await database.getAllAsync<T>(sql, args as any);
     
     return {
       success: true,
@@ -137,12 +147,19 @@ export async function executeTransaction<T = unknown>(
   queries: Array<{ sql: string; args?: unknown[] }>
 ): Promise<{ success: boolean; data?: T[]; error?: string }> {
   try {
+    if (Platform.OS === 'web') {
+      // For now, on web we execute them using Turso transaction
+      return await executeTursoTransaction<T>(queries);
+    }
+
     const database = await getDatabase();
+    if (!database) throw new Error('Database not available');
+    
     const results: T[] = [];
 
     await database.withTransactionAsync(async () => {
       for (const query of queries) {
-        const result = await database.getAllAsync<T>(query.sql, query.args || []);
+        const result = await database.getAllAsync<T>(query.sql, (query.args || []) as any);
         results.push(...result);
       }
     });
@@ -165,8 +182,15 @@ export async function executeInsert(
   args: unknown[] = []
 ): Promise<{ success: boolean; lastInsertRowId?: number; error?: string }> {
   try {
+    if (Platform.OS === 'web') {
+      const result = await executeTursoQuery(sql, args);
+      return { success: result.success, error: result.error };
+    }
+
     const database = await getDatabase();
-    const result = await database.runAsync(sql, args);
+    if (!database) throw new Error('Database not available');
+    
+    const result = await database.runAsync(sql, args as any);
     
     return {
       success: true,
@@ -186,8 +210,15 @@ export async function executeUpdate(
   args: unknown[] = []
 ): Promise<{ success: boolean; changes?: number; error?: string }> {
   try {
+    if (Platform.OS === 'web') {
+      const result = await executeTursoQuery(sql, args);
+      return { success: result.success, error: result.error };
+    }
+
     const database = await getDatabase();
-    const result = await database.runAsync(sql, args);
+    if (!database) throw new Error('Database not available');
+    
+    const result = await database.runAsync(sql, args as any);
     
     return {
       success: true,

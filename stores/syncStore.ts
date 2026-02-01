@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import NetInfo from '@react-native-community/netinfo';
+import { Platform } from 'react-native';
 import { executeQuery, executeInsert, executeUpdate } from '@/lib/sqlite';
 import { executeTursoQuery, executeTursoTransaction, checkTursoConnection } from '@/lib/turso';
 import { SyncQueueItem } from '@/lib/types/database';
@@ -22,6 +23,11 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
   pendingSyncs: 0,
 
   checkConnection: async () => {
+    if (Platform.OS === 'web') {
+      set({ isOnline: true });
+      return;
+    }
+    
     const netInfo = await NetInfo.fetch();
     const online = netInfo.isConnected ?? false;
     
@@ -47,6 +53,8 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
   },
 
   addToSyncQueue: async (tableName, recordId, operation, data) => {
+    if (Platform.OS === 'web') return;
+    
     try {
       await executeInsert(
         'INSERT INTO sync_queue (table_name, record_id, operation, data) VALUES (?, ?, ?, ?)',
@@ -60,7 +68,7 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
   },
 
   syncPending: async () => {
-    if (get().isSyncing || !get().isOnline) {
+    if (Platform.OS === 'web' || get().isSyncing || !get().isOnline) {
       return;
     }
 
@@ -179,6 +187,8 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
   },
 
   getPendingSyncs: async () => {
+    if (Platform.OS === 'web') return 0;
+    
     try {
       const result = await executeQuery<{ count: number }>(
         'SELECT COUNT(*) as count FROM sync_queue'

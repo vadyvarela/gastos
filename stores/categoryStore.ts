@@ -1,8 +1,9 @@
 import { create } from 'zustand';
+import { Platform } from 'react-native';
 import { Category } from '@/lib/types/category';
 import { executeQuery, executeInsert, executeUpdate } from '@/lib/sqlite';
 import { useSyncStore } from './syncStore';
-import { normalizeCategories } from '@/utils/database';
+import { normalizeCategories, normalizeCategory } from '@/utils/database';
 
 interface CategoryStore {
   categories: Category[];
@@ -68,7 +69,7 @@ export const useCategoryStore = create<CategoryStore>((set, get) => ({
       );
 
       if (result.success) {
-        await useSyncStore.getState().addToSyncQueue('categories', category.id, 'INSERT', category);
+        await useSyncStore.getState().addToSyncQueue('categories', id, 'INSERT', category);
         await get().fetchCategories();
         return true;
       }
